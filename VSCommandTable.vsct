@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<Extern href="stdidcmd.h"/>
+	<Extern href="vsshlids.h"/>
+	<Include href="KnownImageIds.vsct"/>
+	<Include href="VSGlobals.vsct"/>
+
+	<Commands package="ReadmeGen">
+		<Groups>
+			<Group guid="ReadmeGen" id="MyMenuGroup" priority="0x0600">
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+			</Group>
+			<Group guid="ReadmeGen" id="MyMenuGroup" priority="0x0600">
+				<Parent guid="VSMainMenu" id="Tools"/>
+			</Group>
+			<Group guid="ReadmeGen" id="MyMenuGroup" priority="0x0600">
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBPROJECT"/>
+			</Group>
+		</Groups>
+
+		<!--This section defines the elements the user can interact with, like a menu command or a button
+        or combo box in a toolbar. -->
+		<Buttons>
+			<Button guid="ReadmeGen" id="MyCommand" priority="0x0100" type="Button">
+				<Parent guid="ReadmeGen" id="MyMenuGroup" />
+				<Icon guid="ImageCatalogGuid" id="AddDocument" />
+				<CommandFlag>IconIsMoniker</CommandFlag>
+				<Strings>
+					<ButtonText>Generate README</ButtonText>
+					<LocCanonicalName>.ReadmeGen.MyCommand</LocCanonicalName>
+				</Strings>
+			</Button>
+		</Buttons>
+	</Commands>
+
+	<Symbols>
+		<GuidSymbol name="ReadmeGen" value="{8d5f12ed-e847-4244-8ba8-8fc627829335}">
+			<IDSymbol name="MyMenuGroup" value="0x0001" />
+			<IDSymbol name="MyCommand" value="0x0100" />
+		</GuidSymbol>
+	</Symbols>
+</CommandTable>
