@@ -83,6 +83,9 @@
     <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI">
+      <Version>1.0.0-beta.2</Version>
+    </PackageReference>
     <PackageReference Include="Community.VisualStudio.VSCT" Version="16.0.29.6" PrivateAssets="all" />
     <PackageReference Include="Community.VisualStudio.Toolkit.17" Version="17.0.430" ExcludeAssets="Runtime" />
     <PackageReference Include="Microsoft.Build">

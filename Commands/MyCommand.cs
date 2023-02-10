@@ -13,8 +13,17 @@ internal sealed class MyCommand : BaseCommand<MyCommand> {
     protected override async Task ExecuteAsync(OleMenuCmdEventArgs e) {
         // create a web request with the bearer token
         var client = new HttpClient();
-        var token = Environment.GetEnvironmentVariable("OPENAI_KEY");
-        Debug.WriteLine(token);
+        var token = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY");
+        var endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        var model = Environment.GetEnvironmentVariable("AZURE_MODEL_DEPLOYMENT");
+
+        OutputWindowPane pane;
+
+        pane = await VS.Windows.GetOutputWindowPaneAsync(Community.VisualStudio.Toolkit.Windows.VSOutputWindowPane.General);
+
+        await pane.ActivateAsync();
+        await pane.WriteLineAsync($"OpenAI Token {token}");
+        
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // root project dir
@@ -24,7 +33,9 @@ internal sealed class MyCommand : BaseCommand<MyCommand> {
         var activeProjectPath = new DirectoryInfo(activeProject.FullPath).Parent.FullName;
         var finalFileName = Path.Combine(activeProjectPath, newFileName);
 
+        await VS.StatusBar.StartAnimationAsync(StatusAnimation.Find);
         await VS.StatusBar.ShowProgressAsync("Inspecting project for context...", 1, 4);
+        await pane.WriteLineAsync($"Gathering all data from project file: {activeProject.FullPath}");
         // TODO: get from the project files or nuspec if exists
         // TODO: Open the CSPROJ file        
         var projContents = File.ReadAllText(activeProject.FullPath);
@@ -34,35 +45,38 @@ internal sealed class MyCommand : BaseCommand<MyCommand> {
         var prompt = $"Using the project information here, write a README file for a NuGet library with installation instructions and usage example if possible:\n{projContents}";
 
         await VS.StatusBar.ShowProgressAsync("Building prompt for the robots...", 2, 4);
-        // build the request payload
-        // parameters
-        var parameters = new { model = "text-davinci-003", prompt = prompt, max_tokens = 2048, temperature = 0 };
-
-        // convert to json
-        var json = JsonConvert.SerializeObject(parameters);
-
-        // convert to stringcontent
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        await pane.WriteLineAsync($"Prompt: {prompt}");
 
         // ask the robots
         // show some progress indicator?
         await VS.StatusBar.ShowProgressAsync("Communicating with the robots...", 3, 4);
-        var response = await client.PostAsync("https://api.openai.com/v1/completions", content);
+
+        var options = new Azure.AI.OpenAI.CompletionsOptions() {
+            Prompt = { prompt },
+            Temperature = 0.3f,
+            MaxTokens = 2048,
+            Model = "text-davinci-003"
+        };        
+        
+        var oai = new Azure.AI.OpenAI.OpenAIClient(new Uri(endpoint), new Azure.AzureKeyCredential(token));
+        var completions = await oai.GetCompletionsAsync(model, options, new System.Threading.CancellationToken());
 
         await VS.StatusBar.ShowProgressAsync("Generating README in project...", 4, 4);
         // extract the text result
-        var result = await response.Content.ReadAsStringAsync();
-        var doc = JObject.Parse(result);
-        var resultText = doc["choices"][0]["text"].ToString();
+        await pane.WriteLineAsync($"Full OpenAI Result: {completions.GetRawResponse().Content.ToString()}");
+        var resultText = completions.Value.Choices[0].Text;
 
         Debug.WriteLine(resultText);
 
         // create the file on disk at project location
         File.WriteAllText(finalFileName, resultText);
-
+        await pane.WriteLineAsync($"Written file to: {finalFileName}");
+        
         // add the new file on disk to the project
         await activeProject.AddExistingFilesAsync(finalFileName);
 
+        await VS.StatusBar.EndAnimationAsync(StatusAnimation.Find);
+        
         // open the new file
         await VS.Documents.OpenInPreviewTabAsync(finalFileName);
 
