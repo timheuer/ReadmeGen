@@ -12,7 +12,6 @@ namespace ReadmeGen;
 internal sealed class MyCommand : BaseCommand<MyCommand> {
     protected override async Task ExecuteAsync(OleMenuCmdEventArgs e) {
         // create a web request with the bearer token
-        var client = new HttpClient();
         var token = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY");
         var endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
         var model = Environment.GetEnvironmentVariable("AZURE_MODEL_DEPLOYMENT");
@@ -23,8 +22,6 @@ internal sealed class MyCommand : BaseCommand<MyCommand> {
 
         await pane.ActivateAsync();
         await pane.WriteLineAsync($"OpenAI Token {token}");
-        
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // root project dir
         // create a markdown file in the project and write this text and open it
